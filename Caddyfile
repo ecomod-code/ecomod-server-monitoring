@@ -3,12 +3,16 @@
 }
 
 {$MONITOR_DOMAIN} {
+
 	handle /kuma* {
 		uri strip_prefix /kuma
 		reverse_proxy uptime-kuma:3001
 	}
 
 	handle {
+		basic_auth {
+			{$NETDATA_USER} {$NETDATA_PASSWORD_HASH}
+		}
 		reverse_proxy netdata:19999
 	}
 }
