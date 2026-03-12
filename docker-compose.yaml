@@ -1,0 +1,62 @@
+services:
+  caddy:
+    image: caddy:2
+    container_name: monitoring-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - uptime-kuma
+      - netdata
+    networks:
+      - monitoring
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - monitoring
+
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata-parent
+    restart: unless-stopped
+    hostname: ${NETDATA_HOSTNAME:-monitoring}
+    ports:
+      - "19999:19999"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - netdata_config:/etc/netdata
+      - netdata_lib:/var/lib/netdata
+      - netdata_cache:/var/cache/netdata
+    networks:
+      - monitoring
+
+volumes:
+  caddy_data:
+  caddy_config:
+  uptime_kuma_data:
+  netdata_config:
+  netdata_lib:
+  netdata_cache:
+
+networks:
+  monitoring:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "${DOCKER_MTU:-1450}"

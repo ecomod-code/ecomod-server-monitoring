@@ -1,0 +1,13 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$MONITOR_DOMAIN} {
+	handle /kuma* {
+		reverse_proxy uptime-kuma:3001
+	}
+
+	handle {
+		respond "Monitoring server is running. Use /kuma for Uptime Kuma." 200
+	}
+}
